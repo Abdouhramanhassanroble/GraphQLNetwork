@@ -2,14 +2,14 @@
   <div class="d-flex justify-content-center align-items-center vh-100">
     <form @submit.prevent="handleSubmit" class="w-50">
       <div class="form-group">
-        <label for="email">email</label>
+        <label for="email">Email</label>
         <input
           id="email"
           v-model="email"
-          type="text"
+          type="email"
           class="form-control"
           required
-          placeholder="Enter username"
+          placeholder="Enter email"
         />
       </div>
       <div class="form-group">
@@ -28,46 +28,50 @@
   </div>
 </template>
 
-  
-  <script lang="ts">
-  import { defineComponent, ref } from 'vue';
-  import { useMutation } from '@vue/apollo-composable';
-  import gql from 'graphql-tag';
-  
-  const LOGIN_USER = gql`
-    mutation Login($email: String!, $password: String!) {
-      login(email: $email, password: $password) {
-        token
+<script lang="ts">
+import { defineComponent, ref } from 'vue';
+import { useMutation } from '@vue/apollo-composable';
+import gql from 'graphql-tag';
+import { useRouter } from 'vue-router'; // Importer useRouter pour rediriger l'utilisateur
+
+const LOGIN_USER = gql`
+  mutation Login($email: String!, $password: String!) {
+    login(email: $email, password: $password)
+  }
+`;
+
+export default defineComponent({
+  setup() {
+    const email = ref('');
+    const password = ref('');
+    const router = useRouter(); // Initialiser le routeur
+    const { mutate: login } = useMutation(LOGIN_USER);
+
+    const handleSubmit = async () => {
+      try {
+        const result = await login({
+          email: email.value,
+          password: password.value,
+        });
+        const token = result?.data?.login;
+        console.log('Token:', token);
+        console.log('Vous êtes connecté');
+        
+        // Sauvegarder le token dans le localStorage
+        localStorage.setItem('token', token);
+
+        // Rediriger vers /articles
+        router.push('/articles');
+      } catch (error) {
+        console.error('Erreur lors de la connexion:', error);
       }
-    }
-  `;
-  
-  export default defineComponent({
-    setup() {
-      const email = ref('');
-      const password = ref('');
-      const { mutate: login } = useMutation(LOGIN_USER);
-  
-      const handleSubmit = async () => {
-        try {
-          const result = await login({
-              email: email.value,
-              password: password.value,
-            }
-          );
-          console.log('Token:', result?.data.login.token)
-          // Sauvegarder le token dans le localStorage ou gérer l'état utilisateur
-        } catch (error) {
-          console.error(error);
-        }
-      };
-  
-      return {
-        email,
-        password,
-        handleSubmit,
-      };
-    },
-  });
-  </script>
-  
+    };
+
+    return {
+      email,
+      password,
+      handleSubmit,
+    };
+  },
+});
+</script>

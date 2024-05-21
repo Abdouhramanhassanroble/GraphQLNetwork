@@ -30,7 +30,6 @@ const typeDefs = gql`
     article: Article!
     user: User!
   }
-
   type Query {
     users: [User!]!
     articles: [Article!]!
@@ -39,11 +38,11 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createUser(email: String!, password: String!): User!
-    login(email: String!, password: String!): String!
-    createArticle(title: String!, content: String!): Article!
-    createComment(content: String!, articleId: Int!): Comment!
-    likeArticle(articleId: Int!): Like!
+    createUser(email: String!, password: String!): User
+    login(email: String!, password: String!): String
+    createArticle(title: String!, content: String!): Article
+    createComment(content: String!, articleId: Int!): Comment
+    likeArticle(articleId: Int!): Like
   }
 `;
 
