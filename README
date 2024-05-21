@@ -36,7 +36,7 @@ npm install
 Pour démarrer le serveur de développement, exécutez la commande suivante :
 
 ```
-npm run dev
+npm run start
 ```
 
 Le serveur GraphQL sera accessible à l'adresse `http://localhost:4000`. Vous pouvez accéder à l'interface Playground à l'adresse `http://localhost:4000/graphql`.
