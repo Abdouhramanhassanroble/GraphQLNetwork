@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { cp } from 'fs';
 
 const prisma = new PrismaClient();
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export interface Context {
     prisma: PrismaClient;
@@ -18,7 +21,7 @@ const context = async ({ req }: { req: any }) => {
   if (token) {
     try {
       // Vérification du token JWT
-      const { userId: id } = jwt.verify(token, 'JWT_SECRET') as { userId: number };
+      const { userId: id } = jwt.verify(token, JWT_SECRET as string) as { userId: number };
         userId = id;
     } catch (error) {
         console.error('Token invalide', error);

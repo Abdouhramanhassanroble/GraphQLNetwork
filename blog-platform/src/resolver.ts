@@ -1,9 +1,16 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Article } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { Context } from './context';
 import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = 'votre_secret_jwt';
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+interface CreateArticleArgs {
+  title: string;
+  content: string;
+}
 
 const resolvers = {
   Query: {
@@ -19,6 +26,16 @@ const resolvers = {
     likes: async () => {
       return await prisma.like.findMany();
     },
+    myArticles: async (_: void, __: void, context: Context) => {
+      if (!context.userId) {
+        throw new Error('Not authenticated');
+      }
+      return await prisma.article.findMany({
+        where: {
+          authorId: context.userId,
+        },
+      });
+    },
   },
   Mutation: {
     createUser: async (_: void, args: { email: string, password: string }) => {
@@ -32,7 +49,6 @@ const resolvers = {
       });
     },
     login: async (_: void, { email, password }: { email: string, password: string }) => {
-
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
         throw new Error('Utilisateur non trouvé');
@@ -43,18 +59,36 @@ const resolvers = {
         throw new Error('Mot de passe incorrect');
       }
 
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-      return token;
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET as string);
 
+      return token;
     },
-    createArticle: async (_: void, { title, content }: { title: string, content: string }, { userId }: { userId: number }) => {
-      return await prisma.article.create({
+    createArticle: async (_parent: {}, args: CreateArticleArgs, context: Context): Promise<Article> => {
+      if (!context.userId) {
+        throw new Error('Not authenticated');
+      }
+
+      const article = await context.prisma.article.create({
         data: {
-          title,
-          content,
-          author: { connect: { id: userId } },
+          title: args.title,
+          content: args.content,
+          author: { connect: { id: context.userId } },
+        },
+        include: {
+          author: true,
         },
       });
+      return article;
+    },
+    deleteArticle: async (_: void, { id }: { id: number }, { userId }: { userId: number }) => {
+      const article = await prisma.article.findUnique({ where: { id } });
+      if (!article) {
+        throw new Error('Article not found');
+      }
+      if (article.authorId !== userId) {
+        throw new Error('Not authorized');
+      }
+      return await prisma.article.delete({ where: { id } });
     },
     createComment: async (_: void, { content, articleId }: { content: string, articleId: number }, { userId }: { userId: number }) => {
       return await prisma.comment.create({

@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex justify-content-center align-items-center vh-100">
-    <form @submit.prevent="handleSubmit" class="w-50">
+    <form @submit.prevent="handleLogin" class="w-50">
       <div class="form-group">
         <label for="email">Email</label>
         <input
@@ -32,7 +32,6 @@
 import { defineComponent, ref } from 'vue';
 import { useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
-import { useRouter } from 'vue-router'; // Importer useRouter pour rediriger l'utilisateur
 
 const LOGIN_USER = gql`
   mutation Login($email: String!, $password: String!) {
@@ -44,33 +43,27 @@ export default defineComponent({
   setup() {
     const email = ref('');
     const password = ref('');
-    const router = useRouter(); // Initialiser le routeur
     const { mutate: login } = useMutation(LOGIN_USER);
 
-    const handleSubmit = async () => {
-      try {
-        const result = await login({
+      const handleLogin = async () => {
+    try {
+      const result = await login({
           email: email.value,
           password: password.value,
-        });
-        const token = result?.data?.login;
-        console.log('Token:', token);
-        console.log('Vous êtes connecté');
-        
-        // Sauvegarder le token dans le localStorage
-        localStorage.setItem('token', token);
+      });
+      const token = result.data.login;
+      localStorage.setItem('token', token);
+      location.href = '/';
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+  };
 
-        // Rediriger vers /articles
-        router.push('/articles');
-      } catch (error) {
-        console.error('Erreur lors de la connexion:', error);
-      }
-    };
 
     return {
       email,
       password,
-      handleSubmit,
+      handleLogin,
     };
   },
 });

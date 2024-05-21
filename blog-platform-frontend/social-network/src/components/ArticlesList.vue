@@ -1,87 +1,43 @@
+<template>
+  <div class="container mt-5">
+    <h2>Liste des Articles</h2>
+    <ul v-if="loading">
+      <li>Chargement...</li>
+    </ul>
+    <ul v-else>
+      <li v-for="article in articles" :key="article.id">
+        <h3>{{ article.title }}</h3>
+        <p>{{ article.content }}</p>
+        <p><strong>Auteur:</strong> {{ article.author.email }}</p>
+      </li>
+    </ul>
+  </div>
+</template>
+
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { useQuery, useMutation } from '@vue/apollo-composable';
-import gql from 'graphql-tag';
-
-const GET_ARTICLES = gql`
-  query GetArticles {
-    articles {
-      id
-      title
-      content
-      likes {
-        id
-      }
-      comments {
-        id
-        content
-      }
-    }
-  }
-`;
-
-const LIKE_ARTICLE = gql`
-  mutation LikeArticle($articleId: Int!) {
-    likeArticle(articleId: $articleId) {
-      id
-    }
-  }
-`;
-
-interface Article {
-  id: number;
-  title: string;
-  content: string;
-  likes: { id: number }[];
-  comments: { id: number; content: string }[];
-}
+import { defineComponent, ref } from 'vue';
+import { useQuery } from '@vue/apollo-composable';
+import { GET_ARTICLES } from '../graphql/queries';
 
 export default defineComponent({
+  name: 'ArticleList',
   setup() {
-    const { result } = useQuery(GET_ARTICLES);
-    const { mutate: likeArticle } = useMutation(LIKE_ARTICLE);
+    const { result, loading, error } = useQuery(GET_ARTICLES);
+    const articles = ref([]);
 
-    const articles = ref<Article[]>([]);
-
-    onMounted(async () => {
-      const { data } = await result.value; // Obtenez directement les données ici
-      articles.value = data.articles;
-    });
-
-    const handleLikeArticle = async (articleId: number) => {
-      try {
-        await likeArticle({ articleId }); // Passez l'objet avec 'articleId'
-      } catch (error) {
-        console.error('Error liking article:', error);
-      }
-    };
+    if (result.value) {
+      articles.value = result.value.articles;
+    }
 
     return {
       articles,
-      handleLikeArticle, // Utilisez une fonction séparée pour gérer l'aimer
+      loading,
+      error,
     };
   },
 });
 </script>
 
-
-<template>
-  <div>
-    <h1>Articles</h1>
-    <div v-for="article in articles" :key="article.id">
-      <h2>{{ article.title }}</h2>
-      <p>{{ article.content }}</p>
-      <button @click="handleLikeArticle(article.id)">Like</button>
-      <p>Likes: {{ article.likes.length }}</p>
-      <div>
-        <h3>Comments</h3>
-        <div v-for="comment in article.comments" :key="comment.id">
-          <p>{{ comment.content }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
-  
-  
+<style scoped>
+/* Ajoutez vos styles ici */
+</style>
