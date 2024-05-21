@@ -32,6 +32,7 @@ const resolvers = {
       });
     },
     login: async (_: void, { email, password }: { email: string, password: string }) => {
+
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
         throw new Error('Utilisateur non trouvé');
@@ -42,8 +43,9 @@ const resolvers = {
         throw new Error('Mot de passe incorrect');
       }
 
-      // Génération du token JWT
-      return jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+      return token;
+
     },
     createArticle: async (_: void, { title, content }: { title: string, content: string }, { userId }: { userId: number }) => {
       return await prisma.article.create({
