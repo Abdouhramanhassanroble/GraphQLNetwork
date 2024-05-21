@@ -27,7 +27,7 @@ cd GraphQLNetwork
 3. Installez les dépendances du backend :
 
 ```
-cd blog-platform$
+cd blog-platform
 npm install
 ```
 
