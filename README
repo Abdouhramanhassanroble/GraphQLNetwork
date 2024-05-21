@@ -1,0 +1,42 @@
+# Réseau Social GraphQL
+
+Ce projet est une application de réseau social construite avec GraphQL, Apollo Server et Prisma. Il permet aux utilisateurs de s'inscrire, de publier des articles, de commenter les articles et de les "liker".
+
+## Prérequis
+
+Avant de commencer, assurez-vous d'avoir installé les éléments suivants sur votre machine :
+
+- Node.js (version 14 ou supérieure)
+- npm (version 6 ou supérieure)
+- Un serveur de base de données compatible avec Prisma  (SQLite pour notre cas)
+
+## Installation du backend 
+
+1. Clonez le dépôt GitHub sur votre machine :
+
+```
+git clone https://github.com/Abdouhramanhassanroble/GraphQLNetwork.git
+```
+
+2. Accédez au répertoire du projet :
+
+```
+cd GraphQLNetwork 
+```
+
+3. Installez les dépendances du backend :
+
+```
+cd blog-platform$
+npm install
+```
+
+## Développement
+
+Pour démarrer le serveur de développement, exécutez la commande suivante :
+
+```
+npm run dev
+```
+
+Le serveur GraphQL sera accessible à l'adresse `http://localhost:4000`. Vous pouvez accéder à l'interface Playground à l'adresse `http://localhost:4000/graphql`.
