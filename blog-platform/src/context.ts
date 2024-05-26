@@ -15,8 +15,8 @@ export const context = async ({ req }: { req: IncomingMessage }): Promise<Contex
   let userId;
   if (token) {
     try {
-      const decoded = jwt.verify(token, 'JWT_SECRET') as { userId: number };
-      userId = decoded.userId;
+      const user = jwt.verify(token, 'JWT_SECRET') as { userId: number };
+      userId = user.userId;
     } catch (e) {
       console.error('Invalid token');
     }
