@@ -13,7 +13,7 @@
         />
       </div>
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password">Mot de passe</label>
         <input
           id="password"
           v-model="password"
@@ -25,7 +25,7 @@
           
         />
       </div>
-      <button type="submit" class="btn btn-primary btn-block">Login</button>
+      <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
     </form>
   </div>
 </template>

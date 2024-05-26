@@ -62,6 +62,7 @@ export default {
     const content = ref('');
     const router = useRouter();
     const isLoggedIn = localStorage.getItem('token') !== null;
+    const userId = localStorage.getItem('userId');
 
 
     const { mutate: createComment, onDone: onCommentCreated, onError: onCommentCreationError } = useMutation(CREATE_COMMENT);
@@ -99,7 +100,7 @@ export default {
     });
 
     const deleteComment = (commentId) => {
-      deleteCommentMutation({ id: commentId });
+      deleteCommentMutation({ id: commentId, userId: userId });
       location.reload();
     };
 
@@ -156,7 +157,8 @@ export default {
       deleteComment,
       isLiked,
       toggleLike,
-      isLoggedIn
+      isLoggedIn,
+      userId
     };
   }
 };

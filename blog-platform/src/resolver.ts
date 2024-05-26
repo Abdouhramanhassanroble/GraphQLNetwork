@@ -80,19 +80,18 @@ const resolvers = {
     },
 
     login: async (_parent: {}, args: ConnexionArgs, context: Context): Promise<string> => {
-      console.log('Received login args:', args); 
 
-      const user = await context.prisma.user.findUnique({ where: { email: args.email } });
-      if (!user) {
+      const utilisateur = await context.prisma.user.findUnique({ where: { email: args.email } });
+      if (!utilisateur) {
         throw new Error('No such user found');
       }
 
-      const valid = await bcrypt.compare(args.password, user.password);
+      const valid = await bcrypt.compare(args.password, utilisateur.password);
       if (!valid) {
         throw new Error('Invalid password');
       }
 
-      const token = jwt.sign({ userId: user.id }, 'JWT_SECRET');
+      const token = jwt.sign({ userId: utilisateur.id }, 'JWT_SECRET');
       return token;
     },
 
