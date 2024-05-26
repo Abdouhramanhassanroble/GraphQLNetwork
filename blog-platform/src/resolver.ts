@@ -79,20 +79,20 @@ const resolvers = {
       });
     },
 
-    login: async (_parent: {},args: ConnexionArgs, context: Context): Promise<string> => {
+    login: async (_parent: {}, args: ConnexionArgs, context: Context): Promise<string> => {
+      console.log('Received login args:', args); 
 
       const user = await context.prisma.user.findUnique({ where: { email: args.email } });
       if (!user) {
-        throw new Error('Utilisateur non trouvé');
+        throw new Error('No such user found');
       }
 
-      const validPassword = await bcrypt.compare(args.password, user.password);
-      if (!validPassword) {
-        throw new Error('Mot de passe incorrect');
+      const valid = await bcrypt.compare(args.password, user.password);
+      if (!valid) {
+        throw new Error('Invalid password');
       }
 
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET as string);
-
+      const token = jwt.sign({ userId: user.id }, 'JWT_SECRET');
       return token;
     },
 
