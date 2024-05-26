@@ -29,13 +29,38 @@ export const GET_ARTICLES = gql`
 
 export const GET_MY_ARTICLES = gql`
   query GetMyArticles {
-    articles {
+    myArticles {
+      id
+      title
+      content
+    }
+  }
+`;
+
+export const GET_ARTICLE_DETAILS = gql`
+  query GetArticleDetails($id: Int!) {
+    article(id: $id) {
       id
       title
       content
       author {
         id
         email
+      }
+      comments {
+        id
+        content
+        author {
+          id
+          email
+        }
+      }
+      likes {
+        id
+        user {
+          id
+          email
+        }
       }
     }
   }

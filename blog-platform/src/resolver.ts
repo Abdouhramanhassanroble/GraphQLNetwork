@@ -1,4 +1,4 @@
-import { PrismaClient, Article } from '@prisma/client';
+import { PrismaClient, Article, User, Comment, Like } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { Context } from './context';
 import jwt from 'jsonwebtoken';
@@ -12,31 +12,57 @@ interface CreateArticleArgs {
   content: string;
 }
 
+interface CreateCommentArgs {
+  content: string;
+  articleId: number;
+}
+
+interface LikeArticleArgs {
+  articleId: number;
+}
+
+
 const resolvers = {
   Query: {
-    users: async () => {
-      return await prisma.user.findMany();
+    users: async (_parent: {}, _args: {}, context: Context): Promise<User[]> => {
+      return context.prisma.user.findMany();
     },
-    articles: async () => {
-      return await prisma.article.findMany();
+    articles: async (_parent: {}, _args: {}, context: Context): Promise<Article[]> => {
+      return context.prisma.article.findMany({ include: { author: true, comments: { include: { author: true } }, likes: true } });
     },
+    
     comments: async () => {
       return await prisma.comment.findMany();
     },
     likes: async () => {
       return await prisma.like.findMany();
     },
-    myArticles: async (_: void, __: void, context: Context) => {
+    myArticles: async (_parent: {}, _args: {}, context: Context): Promise<Article[]> => {
       if (!context.userId) {
         throw new Error('Not authenticated');
       }
-      return await prisma.article.findMany({
-        where: {
-          authorId: context.userId,
-        },
+      return context.prisma.article.findMany({
+        where: { authorId: context.userId },
+        include: { author: true, comments: { include: { author: true } }, likes: true },
       });
+    
     },
-  },
+    
+    article: async (_parent: {}, args: { id: number }, context: Context): Promise<Article | null> => {
+      try {
+        const article = await context.prisma.article.findUnique({
+          where: { id: args.id },
+          include: { author: true, comments: { include: { author: true } }, likes: true },
+        });
+        return article;
+      } catch (error) {
+        console.error("Error fetching article by ID:", error);
+        return null;
+      }
+    },
+    
+  }, 
+
   Mutation: {
     createUser: async (_: void, args: { email: string, password: string }) => {
       const { email, password } = args;
@@ -48,6 +74,7 @@ const resolvers = {
         },
       });
     },
+
     login: async (_: void, { email, password }: { email: string, password: string }) => {
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
@@ -63,6 +90,7 @@ const resolvers = {
 
       return token;
     },
+
     createArticle: async (_parent: {}, args: CreateArticleArgs, context: Context): Promise<Article> => {
       if (!context.userId) {
         throw new Error('Not authenticated');
@@ -80,6 +108,7 @@ const resolvers = {
       });
       return article;
     },
+
     deleteArticle: async (_: void, { id }: { id: number }, { userId }: { userId: number }) => {
       const article = await prisma.article.findUnique({ where: { id } });
       if (!article) {
@@ -88,26 +117,91 @@ const resolvers = {
       if (article.authorId !== userId) {
         throw new Error('Not authorized');
       }
+    
+      // Supprimer les commentaires associés à l'article
+      await prisma.comment.deleteMany({ where: { articleId: id } });
+    
+      // Supprimer les likes associés à l'article
+      await prisma.like.deleteMany({ where: { articleId: id } });
+    
+      // Enfin, supprimer l'article lui-même
       return await prisma.article.delete({ where: { id } });
     },
-    createComment: async (_: void, { content, articleId }: { content: string, articleId: number }, { userId }: { userId: number }) => {
-      return await prisma.comment.create({
+    
+    createComment: async (_parent: {}, args: CreateCommentArgs, context: Context): Promise<Comment> => {
+
+     return await prisma.comment.create({
         data: {
-          content,
-          article: { connect: { id: articleId } },
-          author: { connect: { id: userId } },
+          content: args.content,
+          article: { connect: { id: args.articleId } },
+          author: { connect: { id: context.userId } },
         },
       });
     },
-    likeArticle: async (_: void, { articleId }: { articleId: number }, { userId }: { userId: number }) => {
+
+    deleteComment: async (_parent: {}, args: { id: number }, context: Context): Promise<Comment> => {
+      const deletedComment = await prisma.comment.delete({ 
+        where: { id: args.id } });
+        return deletedComment;
+    },
+  
+
+    likeArticle: async (_parent: {}, args: LikeArticleArgs, context: Context): Promise<Like> => {
+      console.log('User Id:', context.userId);
+      if (!context.userId) {
+        throw new Error('Not authenticated');
+      }
+      const existingLike = await prisma.like.findFirst({
+        where: {
+          articleId: args.articleId,
+          userId: context.userId,
+        },
+      });
+      if (existingLike) {
+        return await prisma.like.delete({
+          where: {
+            id: existingLike.id,
+          },
+        });
+      }
       return await prisma.like.create({
         data: {
-          article: { connect: { id: articleId } },
-          user: { connect: { id: userId } },
+          article: { connect: { id: args.articleId } },
+          user: { connect: { id: context.userId } },
         },
       });
+
     },
+
+    unLikeArticle: async (_parent: {}, args: LikeArticleArgs, context: Context): Promise<Like | null> => {
+      console.log('User Id:', context.userId);
+      
+      if (!context.userId) {
+        throw new Error('Not authenticated');
+      }
+    
+      const existingLike = await prisma.like.findFirst({
+        where: {
+          articleId: args.articleId,
+          userId: context.userId,
+        },
+      });
+    
+      if (existingLike) {
+        return await prisma.like.delete({
+          where: {
+            id: existingLike.id,
+          },
+        });
+      } else {
+        throw new Error('Like not found');
+      }
+    },
+    
+
+
   },
+
   User: {
     articles: async (parent: { id: number }) => {
       return await prisma.user.findUnique({ where: { id: parent.id } }).articles();

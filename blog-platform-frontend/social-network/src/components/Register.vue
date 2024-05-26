@@ -1,67 +1,92 @@
 <template>
-    <div>
-      <h1>Inscription</h1>
-      <form @submit.prevent="handleSubmit">
-        <div>
-          <label for="email">Email:</label>
-          <input id="email" v-model="email" type="email" required />
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header text-center">
+            <h2>Inscription</h2>
+          </div>
+          <div class="card-body">
+            <form @submit.prevent="handleSubmit">
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input
+                  id="email"
+                  v-model="email"
+                  type="email"
+                  class="form-control"
+                  placeholder="Entrez votre email"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input
+                  id="password"
+                  v-model="password"
+                  type="password"
+                  class="form-control"
+                  placeholder="Entrez votre mot de passe"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                S'inscrire
+              </button>
+            </form>
+          </div>
         </div>
-        <div>
-          <label for="password">Mot de passe:</label>
-          <input id="password" v-model="password" type="password" required />
-        </div>
-        <button type="submit">S'inscrire</button>
-      </form>
+      </div>
     </div>
-  </template>
-  
-  <script lang="ts">
-  import { defineComponent, ref } from 'vue';
-  import { useMutation } from '@vue/apollo-composable';
-  import gql from 'graphql-tag';
-  
-  const CREATE_USER = gql`
-    mutation CreateUser($email: String!, $password: String!) {
-      createUser(email: $email, password: $password) {
-        id
-        email
-      }
-    }
-  `;
-  
-  export default defineComponent({
-    name: 'Signup',
-    setup() {
-      const email = ref('');
-      const password = ref('');
+  </div>
+</template>
 
-      const { mutate: createUser } = useMutation(CREATE_USER);
-  
-      const handleSubmit = async () => {
-        try {
-          const result = await createUser({
-              email: email.value,
-              password: password.value,
-            }
-          );
-          console.log('Utilisateur créé:', result?.data.createUser);
-          // Rediriger vers une autre page ou afficher un message de succès
-        } catch (error) {
-          console.error('Erreur lors de l\'inscription:', error);
-          // Afficher un message d'erreur à l'utilisateur
-        }
-      };
-  
-      return {
-        email,
-        password,
-        handleSubmit,
-      };
-    },
-  });
-  </script>
-  
-  <style scoped>
-  /* Styles spécifiques à cette composante */
-  </style>
-  
+<script>
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    const email = ref('');
+    const password = ref('');
+
+    const handleSubmit = () => {
+      // Votre logique de soumission de formulaire
+      console.log('Email:', email.value);
+      console.log('Password:', password.value);
+    };
+
+    return {
+      email,
+      password,
+      handleSubmit,
+    };
+  },
+};
+</script>
+
+<style scoped>
+body {
+  background-color: #f8f9fa;
+  font-family: 'Inter', system-ui, 'Avenir', 'Helvetica', 'Arial', sans-serif;
+}
+
+.card {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #004085;
+}
+</style>

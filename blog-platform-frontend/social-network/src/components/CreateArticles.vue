@@ -32,7 +32,6 @@
 import { defineComponent, ref } from 'vue';
 import { useMutation } from '@vue/apollo-composable';
 import { CREATE_ARTICLE } from '../graphql/mutations';
-import { useRouter } from 'vue-router';
 import client from '../graphql/apolloClient.ts';
 
 export default defineComponent({
@@ -41,7 +40,7 @@ export default defineComponent({
     const title = ref('');
     const content = ref('');
     const { mutate: createArticle } = useMutation(CREATE_ARTICLE, { client });
-    const router = useRouter();
+  
 
     const handleSubmit = async () => {
       try {
@@ -49,8 +48,8 @@ export default defineComponent({
             title: title.value,
             content: content.value,
         });
-        console.log('Article créé:', result.data.createArticle);
-        router.push('/articles');
+        console.log('Article créé:', result?.data.createArticle);
+        location.href = '/';
       } catch (error) {
         console.error('Erreur lors de la création de l\'article:', error);
       }
