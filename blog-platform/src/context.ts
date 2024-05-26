@@ -1,37 +1,25 @@
-import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-
+import { IncomingMessage } from 'http';
+import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 
-const JWT_SECRET = process.env.JWT_SECRET;
-console.log('JWT_SECRET:', JWT_SECRET); // Vérifiez la valeur de JWT_SECRET
-
 export interface Context {
-    prisma: PrismaClient;
-    userId?: number;
+  prisma: PrismaClient;
+  userId?: number;
 }
 
-const context = async ({ req }: { req: any }): Promise<Context> => {
-    // Extraction du token JWT depuis les en-têtes de requête
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.replace('Bearer ', '');
-    let userId;
-
-    if (token) {
-        try {
-            // Vérification du token JWT
-            const { userId: id } = jwt.verify(token, JWT_SECRET as string) as { userId: number };
-            userId = id;
-        } catch (error) {
-            console.error('Token invalide', error);
-        }
+export const context = async ({ req }: { req: IncomingMessage }): Promise<Context> => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  let userId;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, 'JWT_SECRET') as { userId: number };
+      userId = decoded.userId;
+    } catch (e) {
+      console.error('Invalid token');
     }
-
-    return {
-        prisma,
-        userId,
-    };
+  }
+  return { prisma, userId };
 };
-
-export default context;
