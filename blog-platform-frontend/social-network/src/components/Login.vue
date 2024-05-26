@@ -21,12 +21,14 @@
           class="form-control"
           required
           placeholder="Enter password"
+          autocomplete="current-password"
         />
       </div>
       <button type="submit" class="btn btn-primary btn-block">Login</button>
     </form>
   </div>
 </template>
+
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
