@@ -16,6 +16,10 @@ interface CreateCommentArgs {
   content: string;
   articleId: number;
 }
+interface ConnexionArgs {
+  email: string;
+  password: string;
+}
 
 interface LikeArticleArgs {
   articleId: number;
@@ -75,13 +79,14 @@ const resolvers = {
       });
     },
 
-    login: async (_: void, { email, password }: { email: string, password: string }) => {
-      const user = await prisma.user.findUnique({ where: { email } });
+    login: async (_parent: {},args: ConnexionArgs, context: Context): Promise<string> => {
+
+      const user = await context.prisma.user.findUnique({ where: { email: args.email } });
       if (!user) {
         throw new Error('Utilisateur non trouvé');
       }
 
-      const validPassword = await bcrypt.compare(password, user.password);
+      const validPassword = await bcrypt.compare(args.password, user.password);
       if (!validPassword) {
         throw new Error('Mot de passe incorrect');
       }
@@ -175,7 +180,7 @@ const resolvers = {
 
     unLikeArticle: async (_parent: {}, args: LikeArticleArgs, context: Context): Promise<Like | null> => {
       console.log('User Id:', context.userId);
-      
+
       if (!context.userId) {
         throw new Error('Not authenticated');
       }
